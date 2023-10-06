@@ -38,7 +38,7 @@ objects:
       output:
         to:
           kind: ImageStreamTag
-          name: is-${APPLICATION_NAME}-${IMAGE_NAME}:${IMAGE_RELEASE_NUMBER}
+          name: ${APPLICATION_NAME}-${IMAGE_NAME}:${IMAGE_RELEASE_NUMBER}
         imageLabels:
           - name: "fr.edf.project.image.name"
             value: "${IMAGE_NAME}"
