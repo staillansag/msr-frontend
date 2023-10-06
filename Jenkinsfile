@@ -265,7 +265,7 @@ pipeline {
         agent {
             label 'agent-terraform-latest'
         }
-            environment {
+        environment {
             AWS_DEFAULT_REGION = 'eu-west-1'
             NO_PROXY = '*.edf.fr'
             HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
@@ -300,6 +300,12 @@ pipeline {
       }
 
       stage("AWS - Copy image to ECR"){
+            environment {
+                AWS_DEFAULT_REGION = 'eu-west-1'
+                NO_PROXY = '*.edf.fr'
+                HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
+                HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
+            }
           steps{
             script {
 
