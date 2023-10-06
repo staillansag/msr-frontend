@@ -81,7 +81,6 @@ pipeline {
                applicationName = myParameters.parameters.APPLICATION_NAME.trim()
                imageName = myParameters.parameters.IMAGE_NAME.trim()
                maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
-               namespaceDeploy = myParameters.parameters.DEPLOY_NAMESPACE.trim()
 
                ecrUri = myParameters.parameters.ECR_URI.trim()
 
@@ -119,7 +118,6 @@ pipeline {
                     || applicationName.length() == 0
                     || imageName.length() == 0
                     || maintainerEmail.length() == 0
-                    || namespaceDeploy.length() == 0
                     || imageName.length() == 0
                     || ecrUri.length() == 0
                   ) {
