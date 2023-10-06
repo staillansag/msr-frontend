@@ -1,8 +1,28 @@
 final String PARAMETERS_FILE = 'parameters.yml'
 final String CAAS_CONFIG_FILE_ID = 'caas-subscriptions-v4'
 final String REPOSITORY_DEPLOYMENT_PREFIX = 'resources/openshift'
+final String CLOUD_CONFIG_FILE_ID = 'cloud-subscriptions'
+final String OPENSHIFT_REGISTRY_ROUTE = 'default-route-openshift-image-registry.apps.caas-int-hp.automation.edf.fr'
 
-String outputISName
+def fromImage = ""
+def fromCredentialId = ""
+def fromRegistry = ""
+def fromNamespace = ""
+
+def toImage = ""
+def toCredentialId = ""
+def toRegistry = ""
+def toNamespace = ""
+
+def fromToken = ""
+def toToken = ""
+
+def fromCreds = ""
+def toCreds = ""
+
+def CLOUD_CREDENTIAL_ID = ""
+def CLOUD_ASSUME_ROLE= ""
+
 
 pipeline {
    agent {
@@ -19,14 +39,29 @@ pipeline {
    stages{
 
       /*
-      * Loading and reading JSON configuration filel
+      * Loading and reading JSON configuration file
       */
       stage("Load files") {
          steps {
             script {
                configFileProvider([configFile(fileId: "${CAAS_CONFIG_FILE_ID}", targetLocation: "${CAAS_CONFIG_FILE_ID}.json")]) {
                   caasConfig = readJSON file: "${CAAS_CONFIG_FILE_ID}.json"
-               }                           
+               }    
+
+               try {
+                  currentCaasConfig = caasConfig["${namespaceDeploy.replaceAll('_', '-')}"]
+               } catch (Exception e) {
+                  error("[ERROR] - Entry with key ${namespaceDeploy.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
+               }
+
+               openshift.withCluster(currentCaasConfig['url']) {
+                  openshift.withProject(currentCaasConfig['namespaceName']){
+                     openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
+                        fromToken = openshift.raw("whoami", "-t").out.trim()
+                        fromCreds = "unused:${fromToken}"
+                     }
+                  }
+               }                  
 
                /*
                 * Set build env variables
@@ -39,12 +74,35 @@ pipeline {
                 * Get Parameters from parameters.yml file
                 */
                myParameters = readYaml file: "${PARAMETERS_FILE}"
+
+               fromPlatform = myParameters.parameters.FROM_PLATFORM.trim()          
                fromImage = myParameters.parameters.FROM_IMAGE.trim()
                fromNamespace = myParameters.parameters.FROM_NAMESPACE.trim()
                applicationName = myParameters.parameters.APPLICATION_NAME.trim()
                imageName = myParameters.parameters.IMAGE_NAME.trim()
                maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
                namespaceDeploy = myParameters.parameters.DEPLOY_NAMESPACE.trim()
+
+               ecrUri = myParameters.parameters.ECR_URI.trim()
+
+               // /*
+               //  * Get Parameters from Cloud env 
+               //  */
+
+               println("[INFO] - retrieve cloud config")
+
+               configFileProvider([configFile(fileId: "${CLOUD_CONFIG_FILE_ID}", variable: "CLOUD_CONFIG")]) {
+                  cloudConfig = readJSON file: "${CLOUD_CONFIG}"
+               }
+
+               try {
+                  currentCloudConfig = cloudConfig["${AWS_ACCOUNT}"]
+               } catch (Exception e) {
+                  error("[ERROR] - Entry with key ${AWS_ACCOUNT} not found in cloud-subscriptions.json")
+               }
+
+               CLOUD_CREDENTIAL_ID = currentCloudConfig["cloudCredentialId"]
+               CLOUD_ASSUME_ROLE = currentCloudConfig["cloudRole"]
 
             }
          }
@@ -62,14 +120,10 @@ pipeline {
                     || imageName.length() == 0
                     || maintainerEmail.length() == 0
                     || namespaceDeploy.length() == 0
+                    || imageName.length() == 0
+                    || ecrUri.length() == 0
                   ) {
                   error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
-               }
-
-               try {
-                  currentCaasConfig = caasConfig["${namespaceDeploy.replaceAll('_', '-')}"]
-               } catch (Exception e) {
-                  error("[ERROR] - Entry with key ${namespaceDeploy.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
                }
 
             }
@@ -109,7 +163,7 @@ pipeline {
                            "-p", "FROM_NAMESPACE='${fromNamespace}'",
                            "-p", "APPLICATION_NAME='${applicationName}'",
                            "-p", "MAINTAINER_EMAIL='${maintainerEmail}'",
-                           "-p", "IMAGE_TAG='${fromImage}':'${env.BUILD_NUMBER}'")
+                           "-p", "IMAGE_TAG='${imageName}':'${env.BUILD_NUMBER}'")
 
                         println "[INFO] - Generated build template:"
                         print processedTemplate
@@ -203,6 +257,74 @@ pipeline {
             }
          }
       }
+
+      stage('AWS - Assume Role') {
+         
+        agent {
+            label 'agent-terraform-latest'
+        }
+            environment {
+            AWS_DEFAULT_REGION = 'eu-west-1'
+            NO_PROXY = '*.edf.fr'
+            HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
+            HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
+            AWS_CREDENTIALS = credentials("${CLOUD_CREDENTIAL_ID}")
+            AWS_ACCESS_KEY_ID = "${env.AWS_CREDENTIALS_USR}"
+            AWS_SECRET_ACCESS_KEY = "${env.AWS_CREDENTIALS_PSW}"
+        }
+        steps{
+            script {
+
+                println("[INFO] - retrieve creds for Cloud")
+
+                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
+                    ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
+                }
+                
+                ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
+                SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
+                SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
+                
+                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                            toCreds = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws ecr get-authorization-token | jq .authorizationData[0].authorizationToken -r | base64 -d", returnStdout: true)
+                        }
+                    }
+                }
+
+            }
+        }
+      }
+
+      stage("AWS - Copy image to ECR"){
+          steps{
+            script {
+
+                SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${imageName}:${env.BUILD_NUMBER}"
+                DESTINATION = "${ecrUri}/${imageName}:${env.BUILD_NUMBER}"
+
+                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${fromCreds}", var: 'SECRET']]]) {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${toCreds}", var: 'SECRET']]]) {
+                        if ("${fromCreds}" != "" && "${toCreds}" != "") {
+                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds} --dcreds ${toCreds}")
+                        }
+                        else if ("${fromCreds}" != "") {
+                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds}")
+                        }
+                        else if ("${toCreds}" != "") {
+                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --dcreds ${toCreds}")
+                        }
+                        else {
+                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION}")
+                        }
+                    }
+                }
+
+            }
+         }
+      }
+
 
    }
 }
