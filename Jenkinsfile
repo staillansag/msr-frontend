@@ -44,24 +44,6 @@ pipeline {
       stage("Load files") {
          steps {
             script {
-               configFileProvider([configFile(fileId: "${CAAS_CONFIG_FILE_ID}", targetLocation: "${CAAS_CONFIG_FILE_ID}.json")]) {
-                  caasConfig = readJSON file: "${CAAS_CONFIG_FILE_ID}.json"
-               }    
-
-               try {
-                  currentCaasConfig = caasConfig["${namespaceDeploy.replaceAll('_', '-')}"]
-               } catch (Exception e) {
-                  error("[ERROR] - Entry with key ${namespaceDeploy.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
-               }
-
-               openshift.withCluster(currentCaasConfig['url']) {
-                  openshift.withProject(currentCaasConfig['namespaceName']){
-                     openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
-                        fromToken = openshift.raw("whoami", "-t").out.trim()
-                        fromCreds = "unused:${fromToken}"
-                     }
-                  }
-               }                  
 
                /*
                 * Set build env variables
@@ -83,6 +65,27 @@ pipeline {
                maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
 
                ecrUri = myParameters.parameters.ECR_URI.trim()
+
+               configFileProvider([configFile(fileId: "${CAAS_CONFIG_FILE_ID}", targetLocation: "${CAAS_CONFIG_FILE_ID}.json")]) {
+                  caasConfig = readJSON file: "${CAAS_CONFIG_FILE_ID}.json"
+               }    
+
+               try {
+                  currentCaasConfig = caasConfig["${fromNamespace.replaceAll('_', '-')}"]
+               } catch (Exception e) {
+                  error("[ERROR] - Entry with key ${fromNamespace.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
+               }
+
+               openshift.withCluster(currentCaasConfig['url']) {
+                  openshift.withProject(currentCaasConfig['namespaceName']){
+                     openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
+                        fromToken = openshift.raw("whoami", "-t").out.trim()
+                        fromCreds = "unused:${fromToken}"
+                     }
+                  }
+               }                  
+
+
 
                // /*
                //  * Get Parameters from Cloud env 
