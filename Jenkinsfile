@@ -303,9 +303,11 @@ pipeline {
                             kubeConfig = sh (script: "cat /var/lib/jenkins/.kube/config", returnStdout: true)
                             kubectlContext = sh (script: "kubectl config current-context", returnStdout: true)
                             awsCallerIdentity = sh (script: "aws sts get-caller-identity", returnStdout: true)
+                            eksNodes = sh (script: "kubectl get nodes", returnStdout: true)
                             println("[INFO] - kubeConfig = ${kubeConfig}")
                             println("[INFO] - kubectlContext = ${kubectlContext}")
                             println("[INFO] - awsCallerIdentity = ${awsCallerIdentity}")
+                            println("[INFO] - eksNodes = ${eksNodes}")
                         }
                     }
                 }
