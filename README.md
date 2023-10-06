@@ -1,16 +1,31 @@
-# webMethods package template
+# dceFrontEnd
 
-L'objectif de ce template est de faciliter la création de nouveaux packages de microservices webMethods.
+Ce package gère les échanges orientées API pour les différents cas d'usages.
 
-Mode opératoire:
+## Utilisation sur EKS
 
-Cliquez sur le bouton vert "use this template" pour créer un nouveal repo Github à partir de ce template.
-Le nouveau repo sera rattaché à votre ID Github.
+Jusqu'à nouvel ordre, il faut faire un port-forward du service msr-dce-frontend (solution de contournement tant que les ingresses EKS ne sont pas au point):
+```
+kubectl port-forward svc/msr-dce-frontend 8080:80
+```
+La commande doit retourner ceci:
+```
+Forwarding from 127.0.0.1:8080 -> 5555
+Forwarding from [::1]:8080 -> 5555
+```
+Une fois ce port-forward effectué, on peut faire des appels d'API en pointant sur localhost.
+Attention: ces appels en localhost ne fonctionnent que sur la machine où me port-forward a été effectué. On met en place une sorte de tunnel ssh entre la machine locale et le cluster EKS. 
 
-Clonez le repo en local.
-Si votre MSR est installé directement sur votre machive de travail, clonez simplement votre repo dans le répertoire packages.
-Si votre MSR est situé dans un conteneur Docker, clonez votre repo où bon vous semble et montez le répertoire cloné en tant que volume dans ce conteneur.
-Redémarrez ensuite votre MSR pour faire apparaître le nouveau package au niveau du Designer, vous aurez probablement besoin de faire un "refresh" au préalable.
 
-Le template intégre un fichier .gitignore préconfiguré.
-Il y a également un exemple de Dockerfile avec le fichier .dockerignore qui va avec.
+### cas d'usage 1 - demande de fichier zip des personnes
+
+```
+curl --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' \
+--header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U='
+```
+La réponse de l'API doit ressembler à ceci:
+```
+{
+    "idDemande": "c5819c4d-40a6-4475-b4f5-4a9c4aa809ad"
+}
+```

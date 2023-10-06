@@ -1,0 +1,8 @@
+parameters:
+  FROM_IMAGE: "msr-dce-dev:latest"
+  FROM_NAMESPACE: "ea7-integrationdsit-grp-hp"
+  APPLICATION_NAME: "dce"
+  DEPLOY_NAMESPACE: "ea7-integrationdsit-grp-hp"
+  IMAGE_NAME: "msr-frontend"
+  BUILD_NAMESPACE: "ea7-integrationdsit-grp-hp"
+  MAINTAINER_EMAIL: "stephane-externe.tailland@edf.fr"

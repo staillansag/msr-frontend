@@ -4,7 +4,6 @@
 /.classpath
 /.project
 
-*Secret.yaml
-*ConfigMap.yaml
+*secret-*.yaml
 
 license
