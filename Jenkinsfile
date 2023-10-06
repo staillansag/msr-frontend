@@ -299,11 +299,11 @@ pipeline {
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                            kubeConfig = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+                            sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+                            kubeConfig = sh (script: "cat /var/lib/jenkins/.kube/config", returnStdout: true)
+                            kubectlContext = sh (script: "kubectl config current-context", returnStdout: true)
                             println("[INFO] - kubeConfig = ${kubeConfig}")
-                            println("[INFO] - KUBECONFIG = ${env.KUBECONFIG}")
-                            sh (script: "cat /var/lib/jenkins/.kube/config", returnStdout: true)
-                            sh (script: "kubectl config current-context", returnStdout: true)
+                            println("[INFO] - kubectlContext = ${kubectlContext}")
                         }
                     }
                 }
