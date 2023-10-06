@@ -303,8 +303,8 @@ pipeline {
           steps{
             script {
 
-                SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${imageName}:${env.BUILD_NUMBER}"
-                DESTINATION = "${ecrUri}/${imageName}:${env.BUILD_NUMBER}"
+                SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
+                DESTINATION = "${ecrUri}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
 
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${fromCreds}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${toCreds}", var: 'SECRET']]]) {
