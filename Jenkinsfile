@@ -302,7 +302,8 @@ pipeline {
                             kubeConfig = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
                             println("[INFO] - kubeConfig = ${kubeConfig}")
                             println("[INFO] - KUBECONFIG = ${env.KUBECONFIG}")
-                            sh (script: "kubectl get nodes", returnStdout: true)
+                            sh (script: "cat /var/lib/jenkins/.kube/config", returnStdout: true)
+                            sh (script: "kubectl config current-context", returnStdout: true)
                         }
                     }
                 }
