@@ -251,7 +251,7 @@ pipeline {
                         }
             
                         println("[INFO] - Adding tag latest to built image")
-                        openshift.raw("tag", "is-${applicationName}-${imageName}:'${env.BUILD_NUMBER}'" , "is-${applicationName}-${imageName}:latest" )
+                        openshift.raw("tag", "${applicationName}-${imageName}:'${env.BUILD_NUMBER}'" , "${applicationName}-${imageName}:latest" )
 
                      }
                   }
