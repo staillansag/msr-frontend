@@ -141,124 +141,124 @@ pipeline {
           }
       }
 
+    //   stage('Build') {
+    //      steps{
+    //         script {
+    //            openshift.withCluster(currentCaasConfig['url']) {
+    //               openshift.withProject(currentCaasConfig['namespaceName']){
+    //                  openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
 
-      stage('Build') {
-         steps{
-            script {
-               openshift.withCluster(currentCaasConfig['url']) {
-                  openshift.withProject(currentCaasConfig['namespaceName']){
-                     openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
+    //                     imageReleaseDate = sh (script: "date --rfc-3339=seconds", returnStdout: true).trim()
 
-                        imageReleaseDate = sh (script: "date --rfc-3339=seconds", returnStdout: true).trim()
+    //                     /*
+    //                      * Load and process template
+    //                      */
+    //                     def template = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/build-template.yml"
+    //                     def processedTemplate = openshift.process(template ,
+    //                        "-p", "IMAGE_NAME='${imageName}'",
+    //                        "-p", "GIT_URL='${env.GIT_URL}'",
+    //                        "-p", "GIT_BRANCH='${env.GIT_BRANCH}'",
+    //                        "-p", "IMAGE_RELEASE_DATE='${imageReleaseDate}'",
+    //                        "-p", "IMAGE_RELEASE_NUMBER='${env.BUILD_NUMBER}'",
+    //                        "-p", "FROM_IMAGE='${fromImage}'",
+    //                        "-p", "FROM_NAMESPACE='${fromNamespace}'",
+    //                        "-p", "APPLICATION_NAME='${applicationName}'",
+    //                        "-p", "MAINTAINER_EMAIL='${maintainerEmail}'",
+    //                        "-p", "IMAGE_TAG='${imageName}':'${env.BUILD_NUMBER}'")
 
-                        /*
-                         * Load and process template
-                         */
-                        def template = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/build-template.yml"
-                        def processedTemplate = openshift.process(template ,
-                           "-p", "IMAGE_NAME='${imageName}'",
-                           "-p", "GIT_URL='${env.GIT_URL}'",
-                           "-p", "GIT_BRANCH='${env.GIT_BRANCH}'",
-                           "-p", "IMAGE_RELEASE_DATE='${imageReleaseDate}'",
-                           "-p", "IMAGE_RELEASE_NUMBER='${env.BUILD_NUMBER}'",
-                           "-p", "FROM_IMAGE='${fromImage}'",
-                           "-p", "FROM_NAMESPACE='${fromNamespace}'",
-                           "-p", "APPLICATION_NAME='${applicationName}'",
-                           "-p", "MAINTAINER_EMAIL='${maintainerEmail}'",
-                           "-p", "IMAGE_TAG='${imageName}':'${env.BUILD_NUMBER}'")
+    //                     println "[INFO] - Generated build template:"
+    //                     print processedTemplate
 
-                        println "[INFO] - Generated build template:"
-                        print processedTemplate
-
-                        /*
-                        * Create BuildConfig, or update if BuildConfig already exist
-                        */
+    //                     /*
+    //                     * Create BuildConfig, or update if BuildConfig already exist
+    //                     */
 
                         
-                        if (openshift.selector("bc", "bc-${applicationName}-${imageName}").exists()){
-                           println("[INFO] - Buildconfig bc-${applicationName}-${imageName} already exists")
-                           openshift.apply(processedTemplate)
+    //                     if (openshift.selector("bc", "bc-${applicationName}-${imageName}").exists()){
+    //                        println("[INFO] - Buildconfig bc-${applicationName}-${imageName} already exists")
+    //                        openshift.apply(processedTemplate)
 
-                           /*
-                           * Start build
-                           */
-                           openshift.raw("start-build", "bc-${applicationName}-${imageName}")
-                        }
-                        else
-                        {
-                           println("[INFO] - Creating bc-${applicationName}-${imageName}")
-                           openshift.create(processedTemplate)
-                        }
+    //                        /*
+    //                        * Start build
+    //                        */
+    //                        openshift.raw("start-build", "bc-${applicationName}-${imageName}")
+    //                     }
+    //                     else
+    //                     {
+    //                        println("[INFO] - Creating bc-${applicationName}-${imageName}")
+    //                        openshift.create(processedTemplate)
+    //                     }
 
-                        /*
-                        * Follow build
-                        * Get Last Build and check his status
-                        * Start build if no build running
-                        */
-                        println("[INFO] - Follow build")
-                        def bc = openshift.selector("bc", "bc-${applicationName}-${imageName}")
+    //                     /*
+    //                     * Follow build
+    //                     * Get Last Build and check his status
+    //                     * Start build if no build running
+    //                     */
+    //                     println("[INFO] - Follow build")
+    //                     def bc = openshift.selector("bc", "bc-${applicationName}-${imageName}")
 
-                        lastVersionBC = bc.object().status.lastVersion
+    //                     lastVersionBC = bc.object().status.lastVersion
 
-                        if (lastVersionBC == 0)
-                        {
-                           openshift.raw("start-build", "bc-${applicationName}-${imageName}")
-                        }
+    //                     if (lastVersionBC == 0)
+    //                     {
+    //                        openshift.raw("start-build", "bc-${applicationName}-${imageName}")
+    //                     }
 
-                        /*
-                        * Check build after running
-                        */
-                        def b = openshift.selector("build", "bc-${applicationName}-${imageName}-${lastVersionBC}")
+    //                     /*
+    //                     * Check build after running
+    //                     */
+    //                     def b = openshift.selector("build", "bc-${applicationName}-${imageName}-${lastVersionBC}")
                         
-                        /*
-                        * Check build before running
-                        */
-                        timeout(5) {
-                           waitUntil {
-                              return b.object().status.phase == 'Running'
-                           }
-                        }
+    //                     /*
+    //                     * Check build before running
+    //                     */
+    //                     timeout(5) {
+    //                        waitUntil {
+    //                           return b.object().status.phase == 'Running'
+    //                        }
+    //                     }
 
-                        println("[INFO] - Follow build")
+    //                     println("[INFO] - Follow build")
                         
-                        bc.logs('-f')
+    //                     bc.logs('-f')
 
-                        /*
-                        * Check build after running
-                        */
-                        timeout(1) {
-                           waitUntil {
-                              return b.object().status.phase != 'Running'
-                           }
-                        }
+    //                     /*
+    //                     * Check build after running
+    //                     */
+    //                     timeout(1) {
+    //                        waitUntil {
+    //                           return b.object().status.phase != 'Running'
+    //                        }
+    //                     }
 
-                        try {
-                          bc.logs("--follow")
-                        } catch (Exception e) {
-                          println("[ERROR] - Build error")
-                        }
+    //                     try {
+    //                       bc.logs("--follow")
+    //                     } catch (Exception e) {
+    //                       println("[ERROR] - Build error")
+    //                     }
 
-                        timeout(5) {
-                           waitUntil {
-                             return b.object().status.phase != 'Running'
-                           }
-                        }
+    //                     timeout(5) {
+    //                        waitUntil {
+    //                          return b.object().status.phase != 'Running'
+    //                        }
+    //                     }
 
-                        lastStatus = b.object().status.phase
+    //                     lastStatus = b.object().status.phase
                         
-                        if (lastStatus != 'Complete') {
-                           error("[ERROR] Build failed.")
-                        }
+    //                     if (lastStatus != 'Complete') {
+    //                        error("[ERROR] Build failed.")
+    //                     }
             
-                        println("[INFO] - Adding tag latest to built image")
-                        openshift.raw("tag", "${applicationName}-${imageName}:'${env.BUILD_NUMBER}'" , "${applicationName}-${imageName}:latest" )
+    //                     println("[INFO] - Adding tag latest to built image")
+    //                     openshift.raw("tag", "${applicationName}-${imageName}:'${env.BUILD_NUMBER}'" , "${applicationName}-${imageName}:latest" )
 
-                     }
-                  }
-               }
-            }
-         }
-      }
+    //                  }
+    //               }
+    //            }
+    //         }
+    //      }
+    //   }
+
 
       stage('AWS - Assume Role') {
          
@@ -295,43 +295,51 @@ pipeline {
                     }
                 }
 
-            }
-        }
-      }
-
-      stage("AWS - Copy image to ECR"){
-            environment {
-                AWS_DEFAULT_REGION = 'eu-west-1'
-                NO_PROXY = '*.edf.fr'
-                HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
-            }
-          steps{
-            script {
-
-                SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
-                DESTINATION = "${ecrUri}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
-
-                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${fromCreds}", var: 'SECRET']]]) {
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${toCreds}", var: 'SECRET']]]) {
-                        if ("${fromCreds}" != "" && "${toCreds}" != "") {
-                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds} --dcreds ${toCreds}")
-                        }
-                        else if ("${fromCreds}" != "") {
-                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds}")
-                        }
-                        else if ("${toCreds}" != "") {
-                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --dcreds ${toCreds}")
-                        }
-                        else {
-                            sh("skopeo copy docker://${SOURCE} docker://${DESTINATION}")
+                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                            toCreds = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
                         }
                     }
                 }
 
             }
-         }
+        }
       }
+
+    //   stage("AWS - Copy image to ECR"){
+    //         environment {
+    //             AWS_DEFAULT_REGION = 'eu-west-1'
+    //             NO_PROXY = '*.edf.fr'
+    //             HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
+    //             HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
+    //         }
+    //       steps{
+    //         script {
+
+    //             SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
+    //             DESTINATION = "${ecrUri}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
+
+    //             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${fromCreds}", var: 'SECRET']]]) {
+    //                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${toCreds}", var: 'SECRET']]]) {
+    //                     if ("${fromCreds}" != "" && "${toCreds}" != "") {
+    //                         sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds} --dcreds ${toCreds}")
+    //                     }
+    //                     else if ("${fromCreds}" != "") {
+    //                         sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --screds ${fromCreds}")
+    //                     }
+    //                     else if ("${toCreds}" != "") {
+    //                         sh("skopeo copy docker://${SOURCE} docker://${DESTINATION} --dcreds ${toCreds}")
+    //                     }
+    //                     else {
+    //                         sh("skopeo copy docker://${SOURCE} docker://${DESTINATION}")
+    //                     }
+    //                 }
+    //             }
+
+    //         }
+    //      }
+    //   }
 
 
    }
