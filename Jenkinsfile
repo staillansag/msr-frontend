@@ -63,6 +63,7 @@ pipeline {
                applicationName = myParameters.parameters.APPLICATION_NAME.trim()
                imageName = myParameters.parameters.IMAGE_NAME.trim()
                maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
+               AWS_ACCOUNT = myParameters.parameters.AWS_ACCOUNT.trim()
 
                ecrUri = myParameters.parameters.ECR_URI.trim()
 
