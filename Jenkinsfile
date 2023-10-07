@@ -402,80 +402,31 @@ pipeline {
                                 // Wait for the end of the deployment
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout status deployment dce-msr-frontend --timeout=300s", returnStdout: true)
 
-                            }
-                        }
-                    }
-
-                }
-            }
-
-        }
-
-        stage("AWS - Tests"){
-            environment {
-                AWS_DEFAULT_REGION = 'eu-west-1'
-                NO_PROXY = '*.edf.fr'
-                HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                KUBECONFIG = "/var/lib/jenkins/.kube/config"
-                AWS_CREDENTIALS = credentials("${CLOUD_CREDENTIAL_ID}")
-                AWS_ACCESS_KEY_ID = "${env.AWS_CREDENTIALS_USR}"
-                AWS_SECRET_ACCESS_KEY = "${env.AWS_CREDENTIALS_PSW}"
-            }
-            steps{
-                script {
-
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
-                        ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
-                    }
-
-                    ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
-                    SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
-                    SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]    
-
-                    // Retrieval of kubeconfig to connect to the EKS cluster
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            }
-                        }
-                    }
-
-                    // Positionning in the desired EKS namespace
-                    def EKS_NAMESPACE = "${fromNamespace}"
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                kubeContext = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl config current-context", returnStdout: true).trim()
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl config set-context ${kubeContext} --namespace=${EKS_NAMESPACE}", returnStdout: true)
-                            }
-                        }
-                    }
-
-                    // Get an access to the service using port-forward (temporary hack waiting for the ingress to be implemented)
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Get an access to the service using port-forward (temporary hack waiting for the ingress to be implemented)
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl port-forward svc/dce-msr-frontend 8080:80 &", returnStdout: true)
+
+                                // Wait for the tunnel to be set up
+                                sh(script: "sleep 30", returnStdout: true)
+
+                                // Call the API and check the response
+                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                                    println("[INFO] - idDemande = ${idDemande}")
+                                    if (idDemande.length() == 0) {
+                                        performAWSRollback = "true"
+                                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                                    }
+                                }
+
                             }
-                        }
-                    }
-
-                    sh(script: "sleep 30", returnStdout: true)
-
-                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                        idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
-                        println("[INFO] - idDemande = ${idDemande}")
-                        if (idDemande.length() == 0) {
-                            performAWSRollback = "true"
-                            error("[ERROR] - Tests KO: idDemande absent de la réponse")
                         }
                     }
 
                 }
             }
+
         }
+
 
         stage("AWS - Rollback"){
             environment {
@@ -525,7 +476,21 @@ pipeline {
                                 // Wait for the end of the deployment
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout status deployment dce-msr-frontend --timeout=300s", returnStdout: true)
 
-                                error("[ERROR] - Echec du déploiement, un roolback a été effectué")
+                                // Get an access to the service using port-forward (temporary hack waiting for the ingress to be implemented)
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl port-forward svc/dce-msr-frontend 8080:80 &", returnStdout: true)
+
+                                // Wait for the tunnel to be set up
+                                sh(script: "sleep 30", returnStdout: true)
+
+                                // Call the API and check the response
+                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                                    println("[INFO] - idDemande = ${idDemande}")
+                                    if (idDemande.length() == 0) {
+                                        performAWSRollback = "true"
+                                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                                    }
+                                }
 
                             }
                         }
