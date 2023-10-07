@@ -302,19 +302,6 @@ pipeline {
                     }
 
                 }
-                withEnv(['AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID}', 'AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}', 'AWS_SESSION_TOKEN=${SESSION_TOKEN}']) {
-                    script {
-                        // Login Docker Vs ECR
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                    toCreds = sh(script: "aws ecr get-authorization-token | jq .authorizationData[0].authorizationToken -r | base64 -d", returnStdout: true)
-                                }
-                            }
-                        }
-
-                    }
-                }
             }
         }
 
@@ -378,76 +365,42 @@ pipeline {
                     SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
                     SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]                   
 
-                    // Retrieval of kubeconfig to connect to the EKS cluster
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    // Positionning in the desired EKS namespace
-                    def EKS_NAMESPACE = "${fromNamespace}"
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Retrieval of kubeconfig to connect to the EKS cluster
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+
+                                // Positionning in the desired EKS namespace
                                 kubeContext = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl config current-context", returnStdout: true).trim()
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl config set-context ${kubeContext} --namespace=${EKS_NAMESPACE}", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    def imageVersion = "${env.BUILD_NUMBER}"
-                    def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
-                    def deploymentFileContent = readFile(file: deploymentFile)
-                    def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
-                    writeFile (file: "newDeployment.yaml", text: newDeploymentFileContent)
+                                def imageVersion = "${env.BUILD_NUMBER}"
+                                def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
+                                def deploymentFileContent = readFile(file: deploymentFile)
+                                def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
+                                writeFile (file: "newDeployment.yaml", text: newDeploymentFileContent)
 
-                    //println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
+                                // Get the current deployment version - in case the tests go wrong we will rollback to this version
+                                rollbackVersion = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout history deployment/customer-management -o jsonpath='{.metadata.generation}", returnStdout: true)
 
-                    // Apply the microservice configuration
-                    // Note: this config relies on secrets that are not managed by this pipeline, they are part of the namespace / project config
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Apply the microservice configuration
+                                // Note: this config relies on secrets that are not managed by this pipeline, they are part of the namespace / project config
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f resources/kubernetes/30_cm-msr-frontend-properties.yaml", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    // Apply the microservice deployment
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Apply the microservice deployment
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f newDeployment.yaml", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    // Apply the service
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Apply the service
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f resources/kubernetes/32_svc-msr-frontend.yaml", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    // Apply the ingress
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Apply the ingress
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f resources/kubernetes/33_ingress-msr-frontend.yaml", returnStdout: true)
-                            }
-                        }
-                    }
 
-                    // Wait for the end of the deployment
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                // Wait for the end of the deployment
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout status deployment dce-msr-frontend --timeout=300s", returnStdout: true)
+
                             }
                         }
                     }
@@ -514,12 +467,36 @@ pipeline {
                     println("[INFO] - idDemande = ${idDemande}")
 
                     if (idDemande.length() == 0) {
-                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                        println("[INFO] - Tests KO: idDemande absent de la réponse")
+                        performAWSRollback = "true"
                     }
 
                 }
             }
         }
+
+        stage("AWS - Rollback"){
+            environment {
+                AWS_DEFAULT_REGION = 'eu-west-1'
+                NO_PROXY = '*.edf.fr'
+                HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
+                HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
+                KUBECONFIG = "/var/lib/jenkins/.kube/config"
+                AWS_CREDENTIALS = credentials("${CLOUD_CREDENTIAL_ID}")
+                AWS_ACCESS_KEY_ID = "${env.AWS_CREDENTIALS_USR}"
+                AWS_SECRET_ACCESS_KEY = "${env.AWS_CREDENTIALS_PSW}"
+            }
+            when {
+                expression { performAWSRollback == "true" }
+            }
+            steps{
+                script {
+                }
+            }
+
+        }
+
+
 
     }
 
