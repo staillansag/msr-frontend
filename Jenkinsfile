@@ -375,7 +375,7 @@ pipeline {
                     }
 
                     // Positionning in the desired EKS namespace
-                    def EKS_NAMESPACE = "default"
+                    def EKS_NAMESPACE = "${fromNamespace}"
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
