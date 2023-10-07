@@ -387,9 +387,9 @@ pipeline {
                     def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
                     def deploymentFileContent = readFile(file: deploymentFile)
                     def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
-                    writeFile (file: newDeployment.yaml, text: newDeploymentFileContent)
+                    // writeFile (file: newDeployment.yaml, text: newDeploymentFileContent)
 
-                    println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
+                    // println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
 
                     // // Retrieval of kubeconfig to connect to the EKS cluster
                     // wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
