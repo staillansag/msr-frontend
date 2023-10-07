@@ -121,16 +121,16 @@ pipeline {
         stage("Parameters and files analyze"){
             steps{
                 script {
-                if (fromImage.length() == 0
-                        || fromNamespace.length() == 0
-                        || applicationName.length() == 0
-                        || imageName.length() == 0
-                        || maintainerEmail.length() == 0
-                        || imageName.length() == 0
-                        || ecrUri.length() == 0
-                    ) {
-                    error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
-                }
+                    if (fromImage.length() == 0
+                            || fromNamespace.length() == 0
+                            || applicationName.length() == 0
+                            || imageName.length() == 0
+                            || maintainerEmail.length() == 0
+                            || imageName.length() == 0
+                            || ecrUri.length() == 0
+                        ) {
+                        error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
+                    }
 
                 }
             }
@@ -497,8 +497,12 @@ pipeline {
 
                     sh(script: "sleep 30", returnStdout: true)
 
-                    curlResult = sh(script: "curl http://localhost:8080", returnStdout: true)
-                    println("[INFO] - curlResult = ${curlResult}")
+                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                    println("[INFO] - idDemande = ${idDemande}")
+
+                    if (idDemande.length() == 0) {
+                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                    }
 
                 }
             }
