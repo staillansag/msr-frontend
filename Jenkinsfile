@@ -302,6 +302,19 @@ pipeline {
                     }
 
                 }
+                withEnv(['AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID}', 'AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY}', 'AWS_SESSION_TOKEN=${SESSION_TOKEN}']) {
+                    script {
+                        // Login Docker Vs ECR
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                    toCreds = sh(script: "aws ecr get-authorization-token | jq .authorizationData[0].authorizationToken -r | base64 -d", returnStdout: true)
+                                }
+                            }
+                        }
+
+                    }
+                }
             }
         }
 
