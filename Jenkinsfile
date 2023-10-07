@@ -496,6 +496,8 @@ pipeline {
             steps{
                 script {
 
+                    println("[INFO] - performAWSRollback = ${performAWSRollback}")
+
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
                         ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
                     }
@@ -520,7 +522,7 @@ pipeline {
                                 // Apply the microservice configuration
                                 // Note: this config relies on secrets that are not managed by this pipeline, they are part of the namespace / project config
                                 println("[INFO] - Rollbacl to revision = ${rollbackVersion}")
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout undo deployment/customer-management --to-revision=${rollbackVersion}", returnStdout: true)
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout undo deployment/dce-msr-frontend --to-revision=${rollbackVersion}", returnStdout: true)
 
                             }
                         }
