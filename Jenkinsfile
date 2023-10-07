@@ -384,7 +384,7 @@ pipeline {
                                 writeFile (file: "newDeployment.yaml", text: newDeploymentFileContent)
 
                                 // Get the current deployment version - in case the tests go wrong we will rollback to this version
-                                rollbackVersion = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout history deployment/customer-management -o jsonpath='{.metadata.generation}", returnStdout: true)
+                                rollbackVersion = sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout history deployment/dce-msr-frontend -o jsonpath='{.metadata.generation}'", returnStdout: true)
 
                                 // Apply the microservice configuration
                                 // Note: this config relies on secrets that are not managed by this pipeline, they are part of the namespace / project config
