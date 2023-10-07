@@ -365,6 +365,16 @@ pipeline {
             }
             steps{
                 script {
+
+                    // Retrieval of kubeconfig to connect to the EKS cluster
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+                            }
+                        }
+                    }
+
                     // Retrieval of kubeconfig to connect to the EKS cluster
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
