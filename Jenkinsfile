@@ -495,6 +495,8 @@ pipeline {
                         }
                     }
 
+                    sh(script: "sleep 30", returnStdout: true)
+
                     curlResult = sh(script: "curl http://localhost:8080", returnStdout: true)
                     println("[INFO] - curlResult = ${curlResult}")
 
