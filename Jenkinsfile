@@ -383,6 +383,8 @@ pipeline {
                         }
                     }
 
+                    sh(script: "sed -i \"s/dce-msr-frentend:latest/dce-msr-frontend:${env.BUILD_NUMBER}/g\" resources/kubernetes/31_deploy-msr-frontend.yaml > newDeployment.yaml", returnStdout: true)
+
                     // Retrieval of kubeconfig to connect to the EKS cluster
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
