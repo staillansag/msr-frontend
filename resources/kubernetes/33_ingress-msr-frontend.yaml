@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: msr-dce-frontend-ingress
+  name: dce-msr-frontend-ingress
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
@@ -14,6 +14,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: msr-dce-frontend
+            name: dce-msr-frontend
             port:
               number: 443

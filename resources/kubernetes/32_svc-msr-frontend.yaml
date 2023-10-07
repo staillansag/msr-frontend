@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: msr-dce-frontend
+  name: dce-msr-frontend
   labels:
-    name: msr-dce-frontend
+    name: dce-msr-frontend
 spec:
   type: ClusterIP
   ports:
@@ -14,4 +14,4 @@ spec:
     targetPort: 5555
     name: http
   selector:
-    app: msr-dce-frontend
+    app: dce-msr-frontend
