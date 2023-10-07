@@ -23,6 +23,10 @@ def toCreds = ""
 def CLOUD_CREDENTIAL_ID = ""
 def CLOUD_ASSUME_ROLE= ""
 
+def ACCESS_KEY_ID = ""
+def SECRET_ACCESS_KEY = ""
+def SESSION_TOKEN = ""
+
 
 pipeline {
    agent {
@@ -287,11 +291,8 @@ pipeline {
                 ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
                 SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
                 SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
-
-                env.AWS_ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
-                env.AWS_SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
-                env.AWS_SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
                 
+                // Login Docker Vs ECR
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
@@ -300,12 +301,11 @@ pipeline {
                     }
                 }
 
+                // Retrieval of kubeconfig to connect to the EKS cluster
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
                             sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            eksNodes = sh (script: "kubectl get nodes", returnStdout: true)
-                            println("[INFO] - eksNodes = ${eksNodes}")
                         }
                     }
                 }
@@ -348,6 +348,34 @@ pipeline {
     //      }
     //   }
 
+      stage('AWS - EKS deployment') {
+         
+        agent {
+            label 'agent-terraform-latest'
+        }
+        environment {
+            AWS_DEFAULT_REGION = 'eu-west-1'
+            NO_PROXY = '*.edf.fr'
+            HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
+            HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
+            AWS_CREDENTIALS = "${ACCESS_KEY_ID}"
+            AWS_ACCESS_KEY_ID = "${SECRET_ACCESS_KEY}"
+            AWS_SECRET_ACCESS_KEY = "${SESSION_TOKEN}"
+            KUBECONFIG = "/var/lib/jenkins/.kube/config"
+        }
+        steps{
+            script {
+                // Retrieval of kubeconfig to connect to the EKS cluster
+                wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                            sh(script: "kubectl get nodes", returnStdout: true)
+                        }
+                    }
+                }
+
+            }
+        }
 
    }
 }
