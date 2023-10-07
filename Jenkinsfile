@@ -464,13 +464,21 @@ pipeline {
 
                     sh(script: "sleep 30", returnStdout: true)
 
-                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
-                    println("[INFO] - idDemande = ${idDemande}")
-
-                    if (idDemande.length() == 0) {
+                    try {
+                        idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                        println("[INFO] - idDemande = ${idDemande}")
+                        if (idDemande.length() == 0) {
+                            performAWSRollback = "true"
+                            error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                        }
+                    } catch (Exception e) {
                         performAWSRollback = "true"
-                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
+                        error("[ERROR] - Tests KO")
                     }
+
+
+
+
 
                 }
             }
