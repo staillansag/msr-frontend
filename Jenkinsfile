@@ -391,11 +391,38 @@ pipeline {
 
                     println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
 
-                    // Retrieval of kubeconfig to connect to the EKS cluster
+                    // Apply the deployment
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f newDeployment.yaml", returnStdout: true)
+                            }
+                        }
+                    }
+
+                    // Apply the service
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f resources/kubernetes/32_svc-msr-frontend.yaml", returnStdout: true)
+                            }
+                        }
+                    }
+
+                    // Apply the ingress
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f 33_ingress-msr-frontend.yaml", returnStdout: true)
+                            }
+                        }
+                    }
+
+                    // Wait for the end of the deployment
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout status deployment msr-dce-frontend --timeout=300s && echo "Deployment complete", returnStdout: true)
                             }
                         }
                     }
