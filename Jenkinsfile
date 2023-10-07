@@ -366,24 +366,24 @@ pipeline {
             steps{
                 script {
 
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
-                        ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
-                    }
+                    // wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
+                    //     ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
+                    // }
 
-                    ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
-                    SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
-                    SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]                   
+                    // ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
+                    // SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
+                    // SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]                   
 
-                    // Retrieval of kubeconfig to connect to the EKS cluster
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            }
-                        }
-                    }
+                    // // Retrieval of kubeconfig to connect to the EKS cluster
+                    // wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                    //     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                    //         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                    //             sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+                    //         }
+                    //     }
+                    // }
 
-                    def imageVersion = ${env.BUILD_NUMBER}
+                    def imageVersion = "${env.BUILD_NUMBER}"
                     def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
                     def deploymentFileContent = readFile(file: deploymentFile)
                     def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
