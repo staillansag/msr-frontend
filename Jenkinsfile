@@ -522,6 +522,11 @@ pipeline {
                                 println("[INFO] - Rollback to revision = ${rollbackVersion}")
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout undo deployment/dce-msr-frontend --to-revision=${rollbackVersion}", returnStdout: true)
 
+                                // Wait for the end of the deployment
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout status deployment dce-msr-frontend --timeout=300s", returnStdout: true)
+
+                                error("[ERROR] - Echec du déploiement, un roolback a été effectué")
+
                             }
                         }
                     }
