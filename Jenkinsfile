@@ -287,6 +287,10 @@ pipeline {
                 ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
                 SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
                 SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
+
+                env.AWS_ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
+                env.AWS_SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
+                AWS_SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
                 
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
@@ -300,13 +304,7 @@ pipeline {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
                             sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            kubeConfig = sh (script: "cat /var/lib/jenkins/.kube/config", returnStdout: true)
-                            kubectlContext = sh (script: "kubectl config current-context", returnStdout: true)
-                            awsCallerIdentity = sh (script: "aws sts get-caller-identity", returnStdout: true)
-                            eksNodes = sh (script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl get nodes", returnStdout: true)
-                            println("[INFO] - kubeConfig = ${kubeConfig}")
-                            println("[INFO] - kubectlContext = ${kubectlContext}")
-                            println("[INFO] - awsCallerIdentity = ${awsCallerIdentity}")
+                            eksNodes = sh (script: "kubectl get nodes", returnStdout: true)
                             println("[INFO] - eksNodes = ${eksNodes}")
                         }
                     }
