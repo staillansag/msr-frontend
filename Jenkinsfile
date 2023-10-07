@@ -358,19 +358,27 @@ pipeline {
                 NO_PROXY = '*.edf.fr'
                 HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
                 HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                AWS_CREDENTIALS = "${ACCESS_KEY_ID}"
-                AWS_ACCESS_KEY_ID = "${SECRET_ACCESS_KEY}"
-                AWS_SECRET_ACCESS_KEY = "${SESSION_TOKEN}"
                 KUBECONFIG = "/var/lib/jenkins/.kube/config"
+                AWS_CREDENTIALS = credentials("${CLOUD_CREDENTIAL_ID}")
+                AWS_ACCESS_KEY_ID = "${env.AWS_CREDENTIALS_USR}"
+                AWS_SECRET_ACCESS_KEY = "${env.AWS_CREDENTIALS_PSW}"
             }
             steps{
                 script {
+
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${CLOUD_ASSUME_ROLE}", var: 'SECRET']]]) {
+                        ROLE = readJSON text: sh(script: "aws sts assume-role --role-arn '${CLOUD_ASSUME_ROLE}' --role-session-name '${AWS_ACCOUNT.replaceAll('-', '_')}'", returnStdout: true)
+                    }
+
+                    ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
+                    SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
+                    SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]                   
 
                     // Retrieval of kubeconfig to connect to the EKS cluster
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
                             }
                         }
                     }
@@ -379,7 +387,7 @@ pipeline {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "kubectl get nodes", returnStdout: true)
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl set image deployment/msr-dce-frontend 131539360861.dkr.ecr.eu-west-1.amazonaws.com/dce-msr-frontend:12", returnStdout: true)
                             }
                         }
                     }
