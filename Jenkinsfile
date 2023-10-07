@@ -468,11 +468,8 @@ pipeline {
                     println("[INFO] - idDemande = ${idDemande}")
 
                     if (idDemande.length() == 0) {
-                        try {
-                            error("[ERROR] - Tests KO: idDemande absent de la réponse")
-                        } catch (Exception e) {
-                            performAWSRollback = "true"
-                        }
+                        performAWSRollback = "true"
+                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
                     }
 
                 }
@@ -521,7 +518,7 @@ pipeline {
 
                                 // Apply the microservice configuration
                                 // Note: this config relies on secrets that are not managed by this pipeline, they are part of the namespace / project config
-                                println("[INFO] - Rollbacl to revision = ${rollbackVersion}")
+                                println("[INFO] - Rollback to revision = ${rollbackVersion}")
                                 sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl rollout undo deployment/dce-msr-frontend --to-revision=${rollbackVersion}", returnStdout: true)
 
                             }
