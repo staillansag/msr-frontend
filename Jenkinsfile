@@ -301,15 +301,6 @@ pipeline {
                         }
                     }
 
-                    // Retrieval of kubeconfig to connect to the EKS cluster
-                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && aws eks --region eu-west-1 update-kubeconfig --name exp-cluster", returnStdout: true)
-                            }
-                        }
-                    }
-
                 }
             }
         }
@@ -383,7 +374,17 @@ pipeline {
                         }
                     }
 
-                    def imageVersion = "37"
+                    // Positionning in the desired EKS namespace
+                    def EKS_NAMESPACE = "default"
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl config set-context $(kubectl config current-context) --namespace=${EKS_NAMESPACE}", returnStdout: true)
+                            }
+                        }
+                    }
+
+                    def imageVersion = "${env.BUILD_NUMBER}"
                     def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
                     def deploymentFileContent = readFile(file: deploymentFile)
                     def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
