@@ -383,22 +383,22 @@ pipeline {
                     //     }
                     // }
 
-                    def imageVersion = "${env.BUILD_NUMBER}"
+                    def imageVersion = "37"
                     def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
                     def deploymentFileContent = readFile(file: deploymentFile)
                     def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${imageVersion}")
-                    writeFile (file: newDeployment.yaml, text: newDeploymentFileContent)
+                    writeFile (file: "newDeployment.yaml", text: newDeploymentFileContent)
 
-                    // println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
+                    println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
 
-                    // // Retrieval of kubeconfig to connect to the EKS cluster
-                    // wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
-                    //     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
-                    //         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                    //             sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f newDeployment.yaml", returnStdout: true)
-                    //         }
-                    //     }
-                    // }
+                    // Retrieval of kubeconfig to connect to the EKS cluster
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
+                        wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
+                            wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f newDeployment.yaml", returnStdout: true)
+                            }
+                        }
+                    }
 
                 }
             }
