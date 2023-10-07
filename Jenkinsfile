@@ -385,7 +385,7 @@ pipeline {
 
                     def deploymentFile = "resources/kubernetes/31_deploy-msr-frontend.yaml"
                     def deploymentFileContent = readFile(file: deploymentFile)
-                    def newDeploymentFileContent = fileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${env.BUILD_NUMBER}")
+                    def newDeploymentFileContent = deploymentFileContent.replaceAll("dce-msr-frontend:latest", "dce-msr-frontend:${env.BUILD_NUMBER}")
                     writeFile (file: newDeployment.yaml, text: newDeploymentFileContent)
 
                     println("[INFO] - newDeploymentFileContent = ${newDeploymentFileContent}")
