@@ -383,15 +383,15 @@ pipeline {
                         }
                     }
 
-                    sh(script: "sed -i \"s/dce-msr-frentend:latest/dce-msr-frontend:${env.BUILD_NUMBER}/g\" resources/kubernetes/31_deploy-msr-frontend.yaml > newDeployment.yaml", returnStdout: true)
-                    newDeployment = sh(script: "cat newDeployment.yaml", returnStdout: true)
+                    sh(script: "sed -i 's/dce-msr-frontend\:latest/dce-msr-frontend\:'${BUILD_NUMBER}'/g' resources/kubernetes/31_deploy-msr-frontend.yaml", returnStdout: true)
+                    newDeployment = sh(script: "cat resources/kubernetes/31_deploy-msr-frontend.yaml", returnStdout: true)
                     println("[INFO] - newDeployment = ${newDeployment}")
 
                     // Retrieval of kubeconfig to connect to the EKS cluster
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                         wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
                             wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SESSION_TOKEN}", var: 'SECRET']]]) {
-                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f newDeployment.yaml", returnStdout: true)
+                                sh(script: "export AWS_ACCESS_KEY_ID=${ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${SECRET_ACCESS_KEY} AWS_SESSION_TOKEN=${SESSION_TOKEN} && kubectl apply -f resources/kubernetes/31_deploy-msr-frontend.yaml", returnStdout: true)
                             }
                         }
                     }
