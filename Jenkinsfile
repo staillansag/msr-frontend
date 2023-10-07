@@ -290,7 +290,7 @@ pipeline {
 
                 env.AWS_ACCESS_KEY_ID = ROLE["Credentials"]["AccessKeyId"]
                 env.AWS_SECRET_ACCESS_KEY = ROLE["Credentials"]["SecretAccessKey"]
-                AWS_SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
+                env.AWS_SESSION_TOKEN = ROLE["Credentials"]["SessionToken"]
                 
                 wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${ACCESS_KEY_ID}", var: 'SECRET']]]) {
                     wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${SECRET_ACCESS_KEY}", var: 'SECRET']]]) {
