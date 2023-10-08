@@ -249,9 +249,6 @@ pipeline {
 
         stage('AWS - Copy image to ECR') {
             
-            agent {
-                label 'agent-terraform-latest'
-            }
             environment {
                 AWS_DEFAULT_REGION = 'eu-west-1'
                 NO_PROXY = '*.edf.fr'
