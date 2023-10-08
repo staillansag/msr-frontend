@@ -49,80 +49,81 @@ pipeline {
             steps {
                 script {
 
-                /*
+                    /*
                     * Set build env variables
-                */
-                if (! fileExists(PARAMETERS_FILE)) {
-                    error("[ERROR] - Image parameters file ${PARAMETERS_FILE} not exists !")
-                }
+                    */
+                    if (! fileExists(PARAMETERS_FILE)) {
+                        error("[ERROR] - Image parameters file ${PARAMETERS_FILE} not exists !")
+                    }
 
-                /*
+                    /*
                     * Get Parameters from parameters.yml file
                     */
-                myParameters = readYaml file: "${PARAMETERS_FILE}"
+                    myParameters = readYaml file: "${PARAMETERS_FILE}"
 
-                fromPlatform = myParameters.parameters.FROM_PLATFORM.trim()          
-                fromImage = myParameters.parameters.FROM_IMAGE.trim()
-                fromNamespace = myParameters.parameters.FROM_NAMESPACE.trim()
-                applicationName = myParameters.parameters.APPLICATION_NAME.trim()
-                imageName = myParameters.parameters.IMAGE_NAME.trim()
-                maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
-                AWS_ACCOUNT = myParameters.parameters.AWS_ACCOUNT.trim()
+                    fromPlatform = myParameters.parameters.FROM_PLATFORM.trim()          
+                    fromImage = myParameters.parameters.FROM_IMAGE.trim()
+                    fromNamespace = myParameters.parameters.FROM_NAMESPACE.trim()
+                    applicationName = myParameters.parameters.APPLICATION_NAME.trim()
+                    imageName = myParameters.parameters.IMAGE_NAME.trim()
+                    maintainerEmail = myParameters.parameters.MAINTAINER_EMAIL.trim()
+                    AWS_ACCOUNT = myParameters.parameters.AWS_ACCOUNT.trim()
 
-                ecrUri = myParameters.parameters.ECR_URI.trim()
+                    ecrUri = myParameters.parameters.ECR_URI.trim()
 
-                configFileProvider([configFile(fileId: "${CAAS_CONFIG_FILE_ID}", targetLocation: "${CAAS_CONFIG_FILE_ID}.json")]) {
-                    caasConfig = readJSON file: "${CAAS_CONFIG_FILE_ID}.json"
-                }    
+                    configFileProvider([configFile(fileId: "${CAAS_CONFIG_FILE_ID}", targetLocation: "${CAAS_CONFIG_FILE_ID}.json")]) {
+                        caasConfig = readJSON file: "${CAAS_CONFIG_FILE_ID}.json"
+                    }    
 
-                try {
-                    currentCaasConfig = caasConfig["${fromNamespace.replaceAll('_', '-')}"]
-                } catch (Exception e) {
-                    error("[ERROR] - Entry with key ${fromNamespace.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
-                }
-
-                openshift.withCluster(currentCaasConfig['url']) {
-                    openshift.withProject(currentCaasConfig['namespaceName']){
-                        openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
-                            fromToken = openshift.raw("whoami", "-t").out.trim()
-                            fromCreds = "unused:${fromToken}"
-                        }
+                    try {
+                        currentCaasConfig = caasConfig["${fromNamespace.replaceAll('_', '-')}"]
+                    } catch (Exception e) {
+                        error("[ERROR] - Entry with key ${fromNamespace.replaceAll('_', '-')} not found in ${CAAS_CONFIG_FILE_ID} file")
                     }
-                }                  
+
+                    openshift.withCluster(currentCaasConfig['url']) {
+                        openshift.withProject(currentCaasConfig['namespaceName']){
+                            openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
+                                fromToken = openshift.raw("whoami", "-t").out.trim()
+                                fromCreds = "unused:${fromToken}"
+                            }
+                        }
+                    }                  
 
 
 
-                // /*
-                //  * Get Parameters from Cloud env 
-                //  */
+                    // /*
+                    //  * Get Parameters from Cloud env 
+                    //  */
 
-                println("[INFO] - retrieve cloud config")
+                    println("[INFO] - retrieve cloud config")
 
-                configFileProvider([configFile(fileId: "${CLOUD_CONFIG_FILE_ID}", variable: "CLOUD_CONFIG")]) {
-                    cloudConfig = readJSON file: "${CLOUD_CONFIG}"
+                    configFileProvider([configFile(fileId: "${CLOUD_CONFIG_FILE_ID}", variable: "CLOUD_CONFIG")]) {
+                        cloudConfig = readJSON file: "${CLOUD_CONFIG}"
+                    }
+
+                    try {
+                        currentCloudConfig = cloudConfig["${AWS_ACCOUNT}"]
+                    } catch (Exception e) {
+                        error("[ERROR] - Entry with key ${AWS_ACCOUNT} not found in cloud-subscriptions.json")
+                    }
+
+                    CLOUD_CREDENTIAL_ID = currentCloudConfig["cloudCredentialId"]
+                    CLOUD_ASSUME_ROLE = currentCloudConfig["cloudRole"]
+
+                    if (fromImage.length() == 0
+                            || fromNamespace.length() == 0
+                            || applicationName.length() == 0
+                            || imageName.length() == 0
+                            || maintainerEmail.length() == 0
+                            || imageName.length() == 0
+                            || ecrUri.length() == 0
+                        ) {
+                        error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
+                    }
+
                 }
 
-                try {
-                    currentCloudConfig = cloudConfig["${AWS_ACCOUNT}"]
-                } catch (Exception e) {
-                    error("[ERROR] - Entry with key ${AWS_ACCOUNT} not found in cloud-subscriptions.json")
-                }
-
-                CLOUD_CREDENTIAL_ID = currentCloudConfig["cloudCredentialId"]
-                CLOUD_ASSUME_ROLE = currentCloudConfig["cloudRole"]
-
-                }
-
-                if (fromImage.length() == 0
-                        || fromNamespace.length() == 0
-                        || applicationName.length() == 0
-                        || imageName.length() == 0
-                        || maintainerEmail.length() == 0
-                        || imageName.length() == 0
-                        || ecrUri.length() == 0
-                    ) {
-                    error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
-                }
             }
         }
 
