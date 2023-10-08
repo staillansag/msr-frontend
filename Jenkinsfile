@@ -45,7 +45,7 @@ pipeline {
         /*
         * Loading and reading JSON configuration file
         */
-        stage("Load files") {
+        stage("Load and check config") {
             steps {
                 script {
 
@@ -112,40 +112,22 @@ pipeline {
                 CLOUD_ASSUME_ROLE = currentCloudConfig["cloudRole"]
 
                 }
-            }
-        }
 
-        /*
-        * Check parameters not empty and files correct
-        */
-        stage("Parameters and files analyze"){
-            steps{
-                script {
-                    if (fromImage.length() == 0
-                            || fromNamespace.length() == 0
-                            || applicationName.length() == 0
-                            || imageName.length() == 0
-                            || maintainerEmail.length() == 0
-                            || imageName.length() == 0
-                            || ecrUri.length() == 0
-                        ) {
-                        error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
-                    }
-
+                if (fromImage.length() == 0
+                        || fromNamespace.length() == 0
+                        || applicationName.length() == 0
+                        || imageName.length() == 0
+                        || maintainerEmail.length() == 0
+                        || imageName.length() == 0
+                        || ecrUri.length() == 0
+                    ) {
+                    error("[ERROR] - Missing required parameters in ${PARAMETERS_FILE}.")
                 }
             }
         }
 
-        /*
-        * Check code quality (YAML lint, Dockerfile lint)
-        */
-        stage("Code analyze"){
-            steps{
-                println("[INFO] - Not implemented yet")
-            }
-        }
 
-        stage('Build') {
+        stage('OpenShift - Build') {
             steps{
                 script {
                 openshift.withCluster(currentCaasConfig['url']) {
@@ -264,7 +246,7 @@ pipeline {
         }
 
 
-        stage('AWS - Assume Role') {
+        stage('AWS - Copy image to ECR') {
             
             agent {
                 label 'agent-terraform-latest'
@@ -277,7 +259,6 @@ pipeline {
                 AWS_CREDENTIALS = credentials("${CLOUD_CREDENTIAL_ID}")
                 AWS_ACCESS_KEY_ID = "${env.AWS_CREDENTIALS_USR}"
                 AWS_SECRET_ACCESS_KEY = "${env.AWS_CREDENTIALS_PSW}"
-                KUBECONFIG = "/var/lib/jenkins/.kube/config"
             }
             steps{
                 script {
@@ -300,20 +281,6 @@ pipeline {
                             }
                         }
                     }
-
-                }
-            }
-        }
-
-        stage("AWS - Copy image to ECR"){
-                environment {
-                    AWS_DEFAULT_REGION = 'eu-west-1'
-                    NO_PROXY = '*.edf.fr'
-                    HTTP_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                    HTTPS_PROXY = 'vip-appli.proxy.edf.fr:3128'
-                }
-            steps{
-                script {
 
                     SOURCE = "${OPENSHIFT_REGISTRY_ROUTE}/${fromNamespace}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
                     DESTINATION = "${ecrUri}/${applicationName}-${imageName}:${env.BUILD_NUMBER}"
@@ -483,7 +450,7 @@ pipeline {
                                 sh(script: "sleep 30", returnStdout: true)
 
                                 // Call the API and check the response
-                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                                catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                                     idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
                                     println("[INFO] - idDemande = ${idDemande}")
                                     if (idDemande.length() == 0) {
