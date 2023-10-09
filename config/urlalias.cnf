@@ -6,4 +6,9 @@
     <record name="portMap" javaclass="com.wm.util.Values">
     </record>
   </record>
+  <record name="utilisateursAPI" javaclass="com.wm.util.Values">
+    <value name="urlPath">rad/dceFrontEnd.api:utilisateursAPIdesc</value>
+    <record name="portMap" javaclass="com.wm.util.Values">
+    </record>
+  </record>
 </Values>
