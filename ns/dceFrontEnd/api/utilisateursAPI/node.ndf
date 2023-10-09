@@ -12,7 +12,7 @@
     <value name="nsName">dceFrontEnd.api:utilisateursAPI</value>
     <array name="operations" type="record" depth="1">
       <record javaclass="com.wm.util.Values">
-        <value name="urlTemplate">/personnes/demande-csv</value>
+        <value name="urlTemplate">/utilisateurs/demande-csv</value>
         <value name="serviceName">dceFrontEnd.service:demandeCsvUtilisateurs</value>
         <array name="httpMethods" type="value" depth="1">
           <value>POST</value>
