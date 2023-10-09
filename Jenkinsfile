@@ -457,13 +457,11 @@ pipeline {
                                 sh(script: "sleep 30", returnStdout: true)
 
                                 // Call the API and check the response
-                                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
-                                    println("[INFO] - idDemande = ${idDemande}")
-                                    if (idDemande.length() == 0) {
-                                        performAWSRollback = "true"
-                                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
-                                    }
+                                idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                                println("[INFO] - idDemande = ${idDemande}")
+                                if (idDemande.length() == 0) {
+                                    performAWSRollback = "true"
+                                    error("[ERROR] - Tests KO: idDemande absent de la réponse")
                                 }
 
                             }
@@ -531,13 +529,11 @@ pipeline {
                                     sh(script: "sleep 30", returnStdout: true)
 
                                     // Call the API and check the response
-                                    catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                                        idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
-                                        println("[INFO] - idDemande = ${idDemande}")
-                                        if (idDemande.length() == 0) {
-                                            performAWSRollback = "true"
-                                            error("[ERROR] - Tests KO: idDemande absent de la réponse")
-                                        }
+                                    idDemande = sh(script: "curl -s --location --request POST 'http://localhost:8080/personnesAPI/personnes/demande-zip' --header 'Authorization: Basic QWRtaW5pc3RyYXRvcjptYW5hZ2U=' | jq -r .idDemande", returnStdout: true)
+                                    println("[INFO] - idDemande = ${idDemande}")
+                                    if (idDemande.length() == 0) {
+                                        performAWSRollback = "true"
+                                        error("[ERROR] - Tests KO: idDemande absent de la réponse")
                                     }
 
                                 }
