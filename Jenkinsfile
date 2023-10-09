@@ -267,6 +267,7 @@ pipeline {
                         openshift.withProject(currentCaasConfig['namespaceName']){
                             openshift.withCredentials(currentCaasConfig['serviceAccountCredentialId']){
 
+                                def appProperties = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/cm-${imageName}.yaml"
                                 def templateDep = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/deploy-${imageName}-template.yaml"
                                 def templateService = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/service-${imageName}-template.yaml"
                                 def templateRoute = readYaml file: "${REPOSITORY_DEPLOYMENT_PREFIX}/route-${imageName}-template.yaml"
@@ -291,25 +292,28 @@ pipeline {
                                 "-o", "yaml")
 
                                 /*
+                                * Apply properties configMap
+                                */
+                                println("[INFO] - Applying new params to configMap ${imageName}")
+                                deploymentResult = openshift.apply(appProperties)
+
+                                /*
                                 * Apply deployment
                                 */
                                 println("[INFO] - Applying new params to deployment ${imageName}")
                                 deploymentResult = openshift.apply(processedDepTemplate)
-                                println("[INFO] - new params to deployment ${imageName} should be applied")
 
                                 /*
                                 * Apply Service
                                 */
                                 println("[INFO] - Applying new params to Service ${imageName}")
                                 openshift.apply(processedServiceTemplate)
-                                println("[INFO] - new params to Service ${imageName} should be applied")
 
                                 /*
                                 * Apply Route
                                 */
                                 println("[INFO] - Applying new params to Route ${imageName}")
                                 openshift.apply(processedRouteTemplate)
-                                println("[INFO] - new params to Route ${imageName} should be applied")
                                 
                                 deploymentResult.rollout().status()
 
