@@ -11,4 +11,9 @@
     <record name="portMap" javaclass="com.wm.util.Values">
     </record>
   </record>
+  <record name="fichiersAPI" javaclass="com.wm.util.Values">
+    <value name="urlPath">rad/dceFrontEnd.api:fichiersAPIdesc</value>
+    <record name="portMap" javaclass="com.wm.util.Values">
+    </record>
+  </record>
 </Values>
