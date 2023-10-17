@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Values version="2.0">
+  <value name="encodeutf8">true</value>
+  <value name="shared">cHVibGljIHN0YXRpYyBsb25nIGZpYm9uYWNjaShpbnQgbikgewogICAgaWYgKG4gPD0gMSkgcmV0
+dXJuIG47CiAgICByZXR1cm4gZmlib25hY2NpKG4tMSkgKyBmaWJvbmFjY2kobi0yKTsKfQoKcHVi
+bGljIHN0YXRpYyB2b2lkIGFsbG9jYXRlTWVtb3J5KGludCBuLCBpbnQgcykgdGhyb3dzIFNlcnZp
+Y2VFeGNlcHRpb24gewogICAgTGlzdDxieXRlW10+IGxpc3QgPSBuZXcgQXJyYXlMaXN0PD4oKTsK
+ICAgIGJ5dGVbXSBiID0gbmV3IGJ5dGVbbiAqIDEwMjQgKiAxMDI0XTsgIAogICAgbmV3IFJhbmRv
+bSgpLm5leHRCeXRlcyhiKTsgIAogICAgbGlzdC5hZGQoYik7IAogCiAgICB0cnkgewogICAgICAg
+IFRocmVhZC5zbGVlcChzICogMTAwMCk7IAogICAgfSBjYXRjaCAoSW50ZXJydXB0ZWRFeGNlcHRp
+b24gZSkgewogICAgICAgIHRocm93IG5ldyBTZXJ2aWNlRXhjZXB0aW9uKGUpOwogICAgfQogCiAg
+ICBsaXN0LmNsZWFyKCk7IAp9</value>
+  <value name="extends"></value>
+  <array name="implements" type="value" depth="1">
+  </array>
+  <array name="imports" type="value" depth="1">
+    <value>java.util.ArrayList</value>
+    <value>java.util.List</value>
+    <value>java.util.Random</value>
+  </array>
 </Values>
