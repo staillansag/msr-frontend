@@ -73,6 +73,31 @@ public final class service
                 
 	}
 
+
+
+	public static final void waitService (IData pipeline)
+        throws ServiceException
+	{
+		// --- <<IS-START(waitService)>> ---
+		// @sigtype java 3.5
+		// [i] field:0:required milliseconds
+		
+		// pipeline
+		IDataCursor pipelineCursor = pipeline.getCursor();
+		String	milliseconds = IDataUtil.getString( pipelineCursor, "milliseconds" );
+		pipelineCursor.destroy();
+		// pipeline
+		
+		try {
+			Thread.sleep(Long.parseLong(milliseconds));
+		} catch (Exception e) {
+			throw new ServiceException(e);
+		}
+		// --- <<IS-END>> ---
+
+                
+	}
+
 	// --- <<IS-START-SHARED>> ---
 	public static long fibonacci(int n) {
 	    if (n <= 1) return n;
