@@ -67,9 +67,10 @@ objects:
                   cpu: 1000m
                   memory: 2000Mi
               livenessProbe:
-                exec:
-                  command:
-                  - check-health.sh
+                httpGet:
+                  path: /health
+                  port: 5555
+                  scheme: HTTP
                 failureThreshold: 3
                 initialDelaySeconds: 120
                 periodSeconds: 5
