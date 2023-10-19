@@ -31,6 +31,7 @@ data:
     jdbc.wmdb.dbURL=jdbc:wm:postgresql://pg-pocsag.clzdcpofefi7.eu-west-1.rds.amazonaws.com:5432;databaseName=wm;EncryptionMethod=SSL;ValidateServerCertificate=false
     jdbc.wmdb.userid=postgres
     jdbc.wmdb.password=$secret{WM_DB_PASSWORD}
+    jdbc.wmdb.maxConns=20
     jdbc.wmdb.driverAlias=DataDirect Connect JDBC PostgreSQL Driver
     jdbcfunc.ISCoreAudit.connPoolAlias=wmdb
     jdbcfunc.ISInternal.connPoolAlias=wmdb
