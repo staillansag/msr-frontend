@@ -77,8 +77,10 @@ objects:
                 successThreshold: 1
                 timeoutSeconds: 1
               readinessProbe:
-                tcpSocket:
+                httpGet:
+                  path: /health
                   port: 5555
+                  scheme: HTTP
                 initialDelaySeconds: 30
                 periodSeconds: 1
                 failureThreshold: 90
