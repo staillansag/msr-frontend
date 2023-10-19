@@ -67,20 +67,16 @@ objects:
                   cpu: 1000m
                   memory: 1500Mi
               livenessProbe:
-                httpGet:
-                  path: /health
+                tcpSocket:
                   port: 5555
-                  scheme: HTTP
                 failureThreshold: 3
                 initialDelaySeconds: 120
                 periodSeconds: 5
                 successThreshold: 1
                 timeoutSeconds: 1
               readinessProbe:
-                httpGet:
-                  path: /health
+                tcpSocket:
                   port: 5555
-                  scheme: HTTP
                 initialDelaySeconds: 30
                 periodSeconds: 5
                 failureThreshold: 18

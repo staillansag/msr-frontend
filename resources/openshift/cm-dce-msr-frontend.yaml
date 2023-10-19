@@ -10,24 +10,6 @@ data:
     jms.DEFAULT_IS_JMS_CONNECTION.csqSize=0
     jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
 
-    healthindicators.Adapters.enabled=true
-    healthindicators.Cluster.enabled=false
-    healthindicators.Diskspace.enabled=true
-    healthindicators.Diskspace.properties.threshold.value=10
-    healthindicators.HybridConnections.enabled=false
-    healthindicators.JDBC.enabled=true
-    healthindicators.JMS.enabled=true
-    healthindicators.JNDIAliases.enabled=false
-    healthindicators.Memory.enabled=true
-    healthindicators.Memory.properties.threshold.value=10
-    healthindicators.RemoteServers.enabled=false
-    healthindicators.SFTPServers.enabled=false
-    healthindicators.ServiceThread.enabled=true
-    healthindicators.ServiceThread.properties.threshold.value=10
-    healthindicators.Sessions.enabled=false
-    healthindicators.Sessions.properties.threshold.value=85
-    healthindicators.UMAliases.enabled=false
-
     jdbc.wmdb.dbURL=jdbc:wm:oracle://dbaas-std-noe.noe.edf.fr:1521;serviceName=EA7DEV1_S.noe.edf.fr
     jdbc.wmdb.userid=POC_CAAS_WEBM1
     jdbc.wmdb.password=$secret{WM_DB_PASSWORD}
