@@ -65,7 +65,7 @@ objects:
                   memory: 1000Mi
                 limits:
                   cpu: 1000m
-                  memory: 2000Mi
+                  memory: 1500Mi
               livenessProbe:
                 httpGet:
                   path: /health
@@ -82,8 +82,8 @@ objects:
                   port: 5555
                   scheme: HTTP
                 initialDelaySeconds: 30
-                periodSeconds: 1
-                failureThreshold: 90
+                periodSeconds: 5
+                failureThreshold: 18
           volumes:
             - name: secrets
               secret:

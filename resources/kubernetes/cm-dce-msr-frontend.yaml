@@ -10,6 +10,24 @@ data:
     jms.DEFAULT_IS_JMS_CONNECTION.csqSize=0
     jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
 
+    healthindicators.Adapters.enabled=true
+    healthindicators.Cluster.enabled=false
+    healthindicators.Diskspace.enabled=true
+    healthindicators.Diskspace.properties.threshold.value=10
+    healthindicators.HybridConnections.enabled=false
+    healthindicators.JDBC.enabled=true
+    healthindicators.JMS.enabled=true
+    healthindicators.JNDIAliases.enabled=false
+    healthindicators.Memory.enabled=true
+    healthindicators.Memory.properties.threshold.value=10
+    healthindicators.RemoteServers.enabled=false
+    healthindicators.SFTPServers.enabled=false
+    healthindicators.ServiceThread.enabled=true
+    healthindicators.ServiceThread.properties.threshold.value=10
+    healthindicators.Sessions.enabled=false
+    healthindicators.Sessions.properties.threshold.value=85
+    healthindicators.UMAliases.enabled=false
+
     jdbc.wmdb.dbURL=jdbc:wm:postgresql://pg-pocsag.clzdcpofefi7.eu-west-1.rds.amazonaws.com:5432;databaseName=wm;EncryptionMethod=SSL;ValidateServerCertificate=false
     jdbc.wmdb.userid=postgres
     jdbc.wmdb.password=$secret{WM_DB_PASSWORD}
@@ -21,6 +39,12 @@ data:
     settings.watt.net.default.accept=application/json
     settings.watt.server.ns.lockingMode=none
     settings.watt.net.localhost=https://dce-msr-frontend:443
+    settings.watt.server.saveConfigFiles=false 
+    settings.watt.server.audit.logFilesToKeep=1
+    settings.watt.server.serverlogFilesToKeep=1
+    settings.watt.server.stats.logFilesToKeep=1
+    settings.watt.server.pipeline.processor=false
+    statisticsdatacollector.monitorConfig.enabled=false
 
     user.Administrator.password=$secret{ADMIN_PASSWORD}
 

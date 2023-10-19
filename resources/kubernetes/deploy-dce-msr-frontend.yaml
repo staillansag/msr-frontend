@@ -50,24 +50,28 @@ spec:
           resources:
             requests:
               cpu: 300m
-              memory: 500Mi
+              memory: 1000Mi
             limits:
-              cpu: 1000m
+              cpu: 1500m
               memory: 1000Mi
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 5555
+              scheme: HTTP
             failureThreshold: 3
-            initialDelaySeconds: 180
-            periodSeconds: 30
+            initialDelaySeconds: 120
+            periodSeconds: 5
             successThreshold: 1
             timeoutSeconds: 1
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /health
               port: 5555
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            failureThreshold: 24
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 1
+            failureThreshold: 90
       imagePullSecrets:
       - name: ecrregcred
       volumes:
