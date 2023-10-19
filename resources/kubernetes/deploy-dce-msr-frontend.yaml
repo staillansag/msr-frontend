@@ -70,8 +70,8 @@ spec:
               port: 5555
               scheme: HTTP
             initialDelaySeconds: 30
-            periodSeconds: 1
-            failureThreshold: 90
+            periodSeconds: 5
+            failureThreshold: 18
       imagePullSecrets:
       - name: ecrregcred
       volumes:
