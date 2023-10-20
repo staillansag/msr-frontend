@@ -13,7 +13,7 @@ data:
     jdbc.wmdb.dbURL=jdbc:wm:oracle://dbaas-std-noe.noe.edf.fr:1521;serviceName=EA7DEV1_S.noe.edf.fr
     jdbc.wmdb.userid=POC_CAAS_WEBM1
     jdbc.wmdb.password=$secret{WM_DB_PASSWORD}
-    jdbc.wmdb.maxConns=20
+    jdbc.wmdb.maxConns=50
     jdbc.wmdb.driverAlias=DataDirect Connect JDBC Oracle Driver
     jdbcfunc.ISCoreAudit.connPoolAlias=wmdb
     jdbcfunc.ISInternal.connPoolAlias=wmdb
