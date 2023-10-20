@@ -19,6 +19,8 @@ data:
     jdbcfunc.ISInternal.connPoolAlias=wmdb
     jdbcfunc.ProcessAudit.connPoolAlias=wmdb
 
+    globalvariable.SERVER.value=$env{SERVER}
+
     settings.watt.net.default.accept=application/json
     settings.watt.server.ns.lockingMode=none
     settings.watt.net.localhost=https://dce-msr-frontend:443
