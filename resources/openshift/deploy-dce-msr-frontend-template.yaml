@@ -80,11 +80,11 @@ objects:
                 initialDelaySeconds: 30
                 periodSeconds: 5
                 failureThreshold: 18
-          env:
-            - name: SERVER
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
+              env:
+                - name: SERVER
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
           volumes:
             - name: secrets
               secret:
