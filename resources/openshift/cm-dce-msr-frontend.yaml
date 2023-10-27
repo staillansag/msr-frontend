@@ -5,10 +5,14 @@ metadata:
 data:
   application.properties: |
     jndi.DEFAULT_IS_JNDI_PROVIDER.providerURL=nsp://umserver-h:9000
+    jndi.DEFAULT_IS_JNDI_PROVIDER.providerURLFailoverList=nsp://umserver-1:9000\r\nnsp://umserver-2:9000
     jms.DEFAULT_IS_JMS_CONNECTION.clientID=DEFAULT_IS_JMS_CLIENT
     jms.DEFAULT_IS_JMS_CONNECTION.enabled=true
     jms.DEFAULT_IS_JMS_CONNECTION.csqSize=0
     jms.DEFAULT_IS_JMS_CONNECTION.jndi_jndiAliasName=DEFAULT_IS_JNDI_PROVIDER
+    jms.DEFAULT_IS_JMS_CONNECTION.jndi_automaticallyCreateUMAdminObjects=true
+    jms.DEFAULT_IS_JMS_CONNECTION.producerMaxRetryAttempts=30
+    jms.DEFAULT_IS_JMS_CONNECTION.producerRetryInterval=1000
 
     jdbc.wmdb.dbURL=jdbc:wm:oracle://dbaas-std-noe.noe.edf.fr:1521;serviceName=EA7DEV1_S.noe.edf.fr
     jdbc.wmdb.userid=POC_CAAS_WEBM1
@@ -18,6 +22,9 @@ data:
     jdbcfunc.ISCoreAudit.connPoolAlias=wmdb
     jdbcfunc.ISInternal.connPoolAlias=wmdb
     jdbcfunc.ProcessAudit.connPoolAlias=wmdb
+    jdbcfunc.ISDashboardStats.connPoolAlias=none
+
+    statisticsdatacollector.monitorConfig.enabled=false
 
     globalvariable.SERVER.value=$env{SERVER}
 
