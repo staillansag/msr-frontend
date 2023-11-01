@@ -26,7 +26,7 @@ data:
 
     settings.watt.net.default.accept=application/json
     settings.watt.server.ns.lockingMode=none
-    settings.watt.net.localhost=https://dce-msr-frontend:443
+    settings.watt.net.localhost=http://dce-msr-frontend
     settings.watt.server.saveConfigFiles=false 
     settings.watt.server.audit.logFilesToKeep=1
     settings.watt.server.serverlogFilesToKeep=1
