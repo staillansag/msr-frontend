@@ -61,11 +61,11 @@ objects:
                   mountPath: /etc/secrets
               resources:
                 requests:
-                  cpu: 500m
+                  cpu: 300m
                   memory: 1000Mi
                 limits:
                   cpu: 1000m
-                  memory: 1500Mi
+                  memory: 1000Mi
               livenessProbe:
                 tcpSocket:
                   port: 5555
