@@ -4,8 +4,6 @@ pool:
 variables:
   - group: aks.variables
   - group: azure.variables
-  - group: sag.variables
-  - group: environment.variables
   - group: frontend.variables
  
 stages:
