@@ -23,7 +23,7 @@ stages:
     - name: MINOR
       value: $[variables['IMAGE_MINOR_VERSION']]
     - name: VERSION_PREFIX
-      value: ${IMAGE_TAG_BASE}:$(MAJOR).$(MINOR)
+      value: $(IMAGE_TAG_BASE):$(MAJOR).$(MINOR)
     - name: PATCH
       value: $[counter(variables['VERSION_PREFIX'], 1)]
     - name: VERSION
