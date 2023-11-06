@@ -54,7 +54,7 @@ stages:
     - script: |
         docker push "${IMAGE_TAG_BASE}:latest" || exit 1
       displayName: 'Push new image (latest)'
-
+ 
 
 - stage: Deploy
   dependsOn: Build
