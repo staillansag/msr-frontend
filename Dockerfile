@@ -1,4 +1,4 @@
-FROM default-route-openshift-image-registry.apps.caas-int-hp.automation.edf.fr/ea7-integrationdsit-grp-hp/msr-dce-dev:0.0.3
+FROM staillansag/msr-dce-dev:0.0.6
 
 EXPOSE 5555
 EXPOSE 5543
