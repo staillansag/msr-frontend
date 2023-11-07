@@ -106,14 +106,16 @@ stages:
         PODS=$(kubectl get pods --selector=app=msr-frontend -o jsonpath='{.items[*].metadata.name}')
         for POD in $PODS; do
           health_json=$(kubectl exec $POD -- curl -s http://localhost:5555/health)
-          status_checks=$(jq '. | .. | .status? // empty | select(. != "UP")' "$json_file")
-          if [[ -n "$status_checks" ]]; then
-            echo "Error: One or more resources in $POD are not 'UP'."
-            exit 1
+          if [ -z "${health_json}" ]; then
+            echo "Empty response to http://localhost:5555/health for pod ${POD}" && exit 1
           fi
-          jdbc_state_checks=$(jq '.Adapters.JDBCAdapter.Connections[] | select(.state == "suspended")' "$json_file")
+          status_checks=$(echo "$health_json" | jq '. | .. | .status? // empty | select(. != "UP")')
+          if [[ -n "$status_checks" ]]; then
+            echo "Error: One or more resources in $POD are not 'UP'" && exit 1
+          fi
+          jdbc_state_checks=$(echo "$health_json" | jq '.Adapters.JDBCAdapter.Connections[] | select(.state == "suspended")')
           if [[ -n "$jdbc_state_checks" ]]; then
-            echo "Error: One or more JDBC Adapter connections in $POD are suspended."
+            echo "Error: One or more JDBC Adapter connections in $POD are suspended"
             exit 1
           fi
         done
@@ -142,8 +144,9 @@ stages:
         ID_DEMANDE=$(echo "${RESPONSE}" | jq -r '.idDemande')
         echo "ID demande: \n${ID_DEMANDE}"
         if [ -z "${ID_DEMANDE}" ]; then
-          echo "POST /personnes/demande-zip -->  OK"
-        else
           echo "POST /personnes/demande-zip --> ERROR (Invalid idDemande in response: ${ID_DEMANDE})"
+          curl -v --location --request POST 'https://msr-frontend.sttlab.eu/personnesAPI/personnes/demande-zip' \
+          --header 'Authorization: Basic '${AUTH_HEADER}
+          exit 1
         fi
       displayName: 'POST /personnes/demande-zip'      
