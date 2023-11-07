@@ -103,6 +103,7 @@ stages:
       displayName: 'Wait for end of deployment'
 
     - script: |
+        sleep 30
         PODS=$(kubectl get pods --selector=app=msr-frontend -o jsonpath='{.items[*].metadata.name}')
         for POD in $PODS; do
           health_json=$(kubectl exec $POD -- curl -s http://localhost:5555/health)
