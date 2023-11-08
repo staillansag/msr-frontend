@@ -23,7 +23,7 @@ spec:
         app: msr-frontend
     spec:
       containers:
-        - image: staillansag/msr-frontend:0.0.1
+        - image: staillansag/msr-frontend:latest
           imagePullPolicy: Always
           name: msr
           ports:
@@ -90,7 +90,7 @@ spec:
             secretName: licenses
             defaultMode: 0666
             items:
-            - key:  msr-license
+            - key:  msr11-license
               path: licenseKey.xml
         - name: application-properties
           configMap:

@@ -1,14 +1,14 @@
 kind: HorizontalPodAutoscaler
 apiVersion: autoscaling/v2
 metadata:
-  name: dce-msr-frontend-hpa
+  name: msr-frontend-hpa
 spec:
   scaleTargetRef:
     kind: Deployment
-    name: dce-msr-frontend
+    name: msr-frontend
     apiVersion: apps/v1
   minReplicas: 2
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: Resource
       resource:
