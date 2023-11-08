@@ -127,6 +127,7 @@ stages:
 
 - stage: Test
   dependsOn: Deploy
+  condition: succeeded()
 
   jobs:
 
