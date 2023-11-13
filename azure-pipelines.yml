@@ -169,7 +169,7 @@ stages:
         echo "POST /personnes/demande-zip response:"
         echo "${RESPONSE}"
         ID_DEMANDE=$(echo "${RESPONSE}" | jq -r '.idDemande')
-        if [ -z "${ID_DEMANDE}" ]; then
+        if [ "${ID_DEMANDE}" = "null" || -z "${ID_DEMANDE}" ]; then
           echo "POST /personnes/demande-zip --> ERROR (Invalid idDemande in response: ${ID_DEMANDE})" && exit 1
         fi
       displayName: 'POST /personnes/demande-zip'    
