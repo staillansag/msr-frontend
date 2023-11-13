@@ -6,6 +6,7 @@ variables:
   - group: azure.variables
   - group: frontend.variables
   - group: sag.variables
+  - group: environment.variables
  
 stages:
 
@@ -98,6 +99,10 @@ stages:
     - script: |
         kubectl apply -f ./resources/kubernetes/ingress-msr-frontend.yaml
       displayName: 'Apply ingress'
+
+    - script: |
+        kubectl apply -f ./resources/kubernetes/hpa-dce-msr-frontend.yaml
+      displayName: 'Apply hpa'
 
     - script: |
         if [ "${DEPLOY_MICROGATEWAY}" = "true" ]; then
