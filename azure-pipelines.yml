@@ -115,7 +115,7 @@ stages:
         sleep 30
         PODS=$(kubectl get pods --selector=app=msr-frontend -o jsonpath='{.items[*].metadata.name}')
         for POD in $PODS; do
-          health_json=$(kubectl exec $POD -- curl -s http://localhost:5555/health)
+          health_json=$(kubectl exec $POD --container msr -- curl -s http://localhost:5555/health)
           if [ -z "${health_json}" ]; then
             echo "Empty response to http://localhost:5555/health for pod ${POD}" && exit 1
           else
@@ -160,6 +160,7 @@ stages:
         RESPONSE=$(curl -s --location --request POST ${URL} \
           --header 'Authorization: Basic '${AUTH_HEADER} \
           --header 'x-gateway-apikey: '${API_KEY})
+        echo "API root URL: ${URL}"
         echo "POST /personnes/demande-zip response:"
         echo "${RESPONSE}"
         ID_DEMANDE=$(echo "${RESPONSE}" | jq -r '.idDemande')
