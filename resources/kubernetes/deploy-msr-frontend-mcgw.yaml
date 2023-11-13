@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: msr-frontend
+  name: msr-frontend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  minReadySeconds: 0
+  selector:
+    matchLabels:
+      app: msr-frontend
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+      labels:
+        app: msr-frontend
+    spec:
+      containers:
+        - name: microgateway
+          image: sagcr.azurecr.io/microgateway:10.15
+          imagePullPolicy: Always
+          ports:
+          - name: metrics
+            containerPort: 9090
+          resources:
+            requests:
+              cpu: 300m
+              memory: 300Mi
+            limits:
+              cpu: 750m
+              memory: 500Mi
+          env:
+          - name: mcgw_api_gateway_url
+            valueFrom:
+              configMapKeyRef:
+                name: environment-config
+                key: API_GATEWAY_URL
+          - name: mcgw_api_gateway_user
+            valueFrom:
+              secretKeyRef:
+                name: environment-secret
+                key: API_GATEWAY_USERNAME
+          - name: mcgw_api_gateway_password
+            valueFrom:
+              secretKeyRef:
+                name: environment-secret
+                key: API_GATEWAY_PASSWORD
+          - name: mcgw_downloads_apis
+            value: personnesAPI,performanceAPI
+          - name: mcgw_ports_http
+            value: "9090"
+          - name: mcgw_ports_https
+            value: "9093"
+          - name: mcgw_microgatewayPool_microgatewayPoolName
+            value: frontend-mcgw
+          - name: mcgw_aliases_personnesAPI_be_url_type
+            value: endpoint
+          - name: mcgw_aliases_personnesAPI_be_url_endPointURI
+            value: http://localhost:5555
+          - name: mcgw_aliases_performanceAPI_be_url_type
+            value: endpoint
+          - name: mcgw_aliases_performanceAPI_be_url_endPointURI
+            value: http://localhost:5555
+          - name: mcgw_applications_sync_enabled
+            value: "true"
+          - name: mcgw_applications_sync_polling_interval_secs
+            value: "10"
+          - name: mcgw_logging_level
+            value: "debug"
+          volumeMounts:
+            - name: microgateway-license
+              mountPath: /opt/softwareag/Microgateway/config/license.xml
+              subPath:   license.xml
+              readOnly:  true
+          livenessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 10
+        - image: staillansag/msr-frontend:latest
+          imagePullPolicy: Always
+          name: msr
+          ports:
+            - containerPort: 5543
+              name: https
+              protocol: TCP
+            - containerPort: 9999
+              name: diag
+              protocol: TCP
+            - containerPort: 5555
+              name: http
+              protocol: TCP
+            - containerPort: 5555
+              name: metrics
+              protocol: TCP
+          volumeMounts:
+            - name: microservicesruntime-license
+              mountPath: /opt/softwareag/IntegrationServer/config/licenseKey.xml
+              subPath:   licenseKey.xml
+              readOnly:  true
+            - name: application-properties
+              mountPath: /opt/softwareag/IntegrationServer/application.properties
+              subPath:   application.properties
+              readOnly:  true
+            - name: secrets
+              mountPath: /etc/secrets
+          resources:
+            requests:
+              cpu: 300m
+              memory: 1000Mi
+            limits:
+              cpu: 750m
+              memory: 1000Mi
+          livenessProbe:
+            tcpSocket:
+              port: 5555
+            failureThreshold: 3
+            initialDelaySeconds: 180
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            tcpSocket:
+              port: 5555
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            failureThreshold: 30
+          envFrom:
+            - configMapRef:
+                name: environment-config
+          env:
+            - name: SERVER
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: DEPLOYMENT_ID
+              value: "MICROSERVICE_DEPLOYMENT_ID"
+      volumes:
+        - name: secrets
+          secret:
+            secretName: environment-secret
+        - name: microservicesruntime-license
+          secret:
+            secretName: licenses
+            defaultMode: 0666
+            items:
+            - key:  msr-license
+              path: licenseKey.xml
+        - name: microgateway-license
+          secret:
+            secretName: licenses
+            defaultMode: 0666
+            items:
+            - key:  mcgw-license
+              path: license.xml
+        - name: application-properties
+          configMap:
+            name: msr-frontend
+            items:
+            - key:  application.properties
+              path: application.properties
+      imagePullSecrets:
+      - name: sagregcred

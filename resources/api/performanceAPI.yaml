@@ -1,0 +1,48 @@
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: "performanceAPI"
+host: "localhost:5555"
+basePath: "/performanceAPI"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /fibonacci/{n}:
+    get:
+      operationId: "getFibonacci"
+      parameters:
+      - name: "n"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/getFibonacciResponse"
+        "401":
+          description: "Access Denied"
+  /message:
+    get:
+      operationId: "getMessage"
+      parameters:
+      - name: "message"
+        in: "query"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "OK"
+        "401":
+          description: "Access Denied"
+definitions:
+  getFibonacciResponse:
+    required:
+    - "resultat"
+    properties:
+      resultat:
+        type: "string"

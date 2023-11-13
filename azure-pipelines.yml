@@ -88,6 +88,11 @@ stages:
 
     - script: |
         kubectl apply -f ./resources/kubernetes/service-msr-frontend.yaml
+        if [ "${DEPLOY_MICROGATEWAY}" = "true" ]; then
+          kubectl apply -f ./resources/kubernetes/service-msr-frontend-mcgw.yaml
+        else
+          kubectl apply -f ./resources/kubernetes/service-msr-frontend.yaml
+        fi
       displayName: 'Apply service'
 
     - script: |
@@ -95,7 +100,11 @@ stages:
       displayName: 'Apply ingress'
 
     - script: |
-        sed 's/MICROSERVICE_DEPLOYMENT_ID/'${BUILD_BUILDID}'/g' ./resources/kubernetes/deploy-msr-frontend.yaml | kubectl apply -f -
+        if [ "${DEPLOY_MICROGATEWAY}" = "true" ]; then
+          sed 's/MICROSERVICE_DEPLOYMENT_ID/'${BUILD_BUILDID}'/g' ./resources/kubernetes/deploy-msr-frontend-mcgw.yaml | kubectl apply -f -
+        else
+          sed 's/MICROSERVICE_DEPLOYMENT_ID/'${BUILD_BUILDID}'/g' ./resources/kubernetes/deploy-msr-frontend.yaml | kubectl apply -f -
+        fi
       displayName: 'Apply deployment'
 
     - script: |
@@ -127,7 +136,6 @@ stages:
 
 - stage: Test
   dependsOn: Deploy
-  condition: succeeded()
 
   jobs:
 
@@ -142,13 +150,22 @@ stages:
       env:
         SAG_MSR_ADMIN_PASSWORD: $(SAG_MSR_ADMIN_PASSWORD)
 
+# Note: basic auth isn't used if the microgateway is deployed, but we keep it here as a convenience to simplify the code
     - script: |
-        RESPONSE=$(curl -s --location --request POST 'https://msr-frontend.sttlab.eu/personnesAPI/personnes/demande-zip' \
-          --header 'Authorization: Basic '${AUTH_HEADER})
+        if [ "${DEPLOY_MICROGATEWAY}" = "true" ]; then
+            URL='https://msr-frontend.sttlab.eu/gateway/personnesAPI/1.0/personnes/demande-zip'
+        else
+            URL='https://msr-frontend.sttlab.eu/personnesAPI/personnes/demande-zip'
+        fi
+        RESPONSE=$(curl -s --location --request POST ${URL} \
+          --header 'Authorization: Basic '${AUTH_HEADER} \
+          --header 'x-gateway-apikey: '${API_KEY})
         echo "POST /personnes/demande-zip response:"
         echo "${RESPONSE}"
         ID_DEMANDE=$(echo "${RESPONSE}" | jq -r '.idDemande')
         if [ -z "${ID_DEMANDE}" ]; then
           echo "POST /personnes/demande-zip --> ERROR (Invalid idDemande in response: ${ID_DEMANDE})" && exit 1
         fi
-      displayName: 'POST /personnes/demande-zip'      
+      displayName: 'POST /personnes/demande-zip'    
+      env:
+        API_KEY: $(API_KEY)

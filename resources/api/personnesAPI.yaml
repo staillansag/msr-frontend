@@ -1,0 +1,48 @@
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: "personnesAPI"
+host: "localhost:5555"
+basePath: "/personnesAPI"
+schemes:
+- "http"
+consumes:
+- "application/json"
+produces:
+- "application/json"
+paths:
+  /personnes/demande-zip:
+    post:
+      operationId: "postDemandeZip"
+      parameters: []
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/postDemandeZipResponse"
+        "401":
+          description: "Access Denied"
+  /personnes/alimente-bus:
+    post:
+      operationId: "postDemandeAlimentationBus"
+      parameters: []
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/postDemandeAlimentationBusResponse"
+        "401":
+          description: "Access Denied"
+definitions:
+  postDemandeZipResponse:
+    required:
+    - "idDemande"
+    properties:
+      idDemande:
+        type: "string"
+  postDemandeAlimentationBusResponse:
+    required:
+    - "idDemande"
+    properties:
+      idDemande:
+        type: "string"
