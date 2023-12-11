@@ -113,7 +113,7 @@ stages:
       displayName: 'Apply deployment'
 
     - script: |
-        kubectl rollout status deployment msr-frontend --timeout=5m 
+        kubectl rollout status deployment msr-frontend --timeout=10m 
       displayName: 'Wait for end of deployment'
 
     - script: |
